@@ -1,0 +1,16 @@
+[package]
+name = "gull"
+version = "0.1.0"
+edition = "2024"
+description = "A hand-rolled packet dissector TUI"
+
+[dependencies]
+pcap-file = "2"
+ratatui = "0.29"
+crossterm = "0.28"
+anyhow = "1"
+thiserror = "1"
+clap = { version = "4", features = ["derive"] }
+
+[profile.dev]
+opt-level = 1
