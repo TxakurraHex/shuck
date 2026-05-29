@@ -1,4 +1,4 @@
-use crate::model::{Frame, Layer, LinkType};
+use crate::model::{Field, Frame, Layer, LinkType};
 
 #[derive(Debug, thiserror::Error)]
 pub enum DissectError {
@@ -10,7 +10,9 @@ pub enum DissectError {
 
 pub type DissectResult = Result<Layer, DissectError>;
 
+pub mod arp;
 pub mod ethernet;
+pub mod ipv4;
 
 pub mod ethertype {
     pub const IPV4: u16 = 0x0800;
@@ -36,6 +38,28 @@ pub fn take(bytes: &[u8], at: usize, len: usize) -> Result<&[u8], DissectError> 
         at,
         have: bytes.len(),
     })
+}
+
+/// Single-field "Payload" layer for protocols that don't have existing dissectors or those with
+/// errors encountered mid-dissection. The field spans the entire length so hex highlighting still
+/// works when selected in the tree pane.
+pub fn undissected_layer(
+    name: impl Into<String>,
+    summary: String,
+    offset: usize,
+    length: usize,
+) -> Layer {
+    Layer {
+        name: name.into(),
+        summary,
+        fields: vec![Field {
+            name: "Payload".into(),
+            value: format!("{} bytes", length),
+            offset,
+            length,
+        }],
+        children: vec![],
+    }
 }
 
 pub fn dissect_frame(frame: &Frame) -> Vec<Layer> {
