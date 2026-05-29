@@ -1,4 +1,4 @@
-use super::{DissectError, DissectResult, ethertype, take};
+use super::{DissectError, DissectResult, arp, ethertype, ipv4, take, undissected_layer};
 use crate::model::{Field, Layer};
 
 /// Format a 6-byte MAC as aa:bb:cc:dd:ee:ff
@@ -100,21 +100,33 @@ pub fn dissect(bytes: &[u8], base: usize) -> DissectResult {
 
     // TODO: Replace stub with ipv4::dissect / arp::dissect
     let children = if bytes.len() > payload_start {
-        vec![Layer {
-            name: format!("{} (not yet dissected)", ethertype::name(ethertype)),
-            summary: format!(
-                "{} bytes of payload at offset {}",
-                bytes.len() - payload_start,
-                base + payload_start
-            ),
-            fields: vec![Field {
-                name: "Payload".into(),
-                value: format!("{} bytes", bytes.len() - payload_start),
-                offset: base + payload_start,
-                length: bytes.len() - payload_start,
-            }],
-            children: vec![],
-        }]
+        let payload_bytes = &bytes[payload_start..];
+        let payload_base = base + payload_start;
+
+        let dissected = match ethertype {
+            ethertype::IPV4 => ipv4::dissect(payload_bytes, payload_base),
+            ethertype::ARP => arp::dissect(payload_bytes, payload_base),
+            _ => Ok(undissected_layer(
+                format!("{} (not yet dissected)", ethertype::name(ethertype)),
+                format!(
+                    "{} bytes of payload at offset {}",
+                    payload_bytes.len(),
+                    payload_base
+                ),
+                payload_base,
+                payload_bytes.len(),
+            )),
+        };
+
+        match dissected {
+            Ok(layer) => vec![layer],
+            Err(e) => vec![undissected_layer(
+                format!("{} (error)", ethertype::name(ethertype)),
+                e.to_string(),
+                payload_base,
+                payload_bytes.len(),
+            )],
+        }
     } else {
         vec![]
     };
