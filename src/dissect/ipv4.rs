@@ -1,4 +1,4 @@
-use super::{DissectError, DissectResult, undissected_layer};
+use super::{DissectError, DissectResult, tcp, udp, undissected_layer};
 use crate::model::{Field, Layer};
 use std::net::Ipv4Addr;
 
@@ -191,14 +191,49 @@ pub fn dissect(bytes: &[u8], base: usize) -> DissectResult {
     // TODO: Implement further tcp/udp dissection
     let payload_off = header_len;
     let children = if bytes.len() > payload_off {
-        let payload_len = bytes.len() - payload_off;
+        let payload_bytes = &bytes[payload_off..];
         let payload_base = base + payload_off;
-        vec![undissected_layer(
-            format!("{} (not yet dissected)", protocol_name(protocol)),
-            format!("{payload_len} bytes of payload at offset {payload_base}"),
-            payload_base,
-            payload_len,
-        )]
+
+        // Non-first fragments don't carry an L4 header, their bytes are
+        // payload-only. Trying to parse them as TCP/UDP produces garbage,
+        // so skip dispatch when fragment_offset > 0.
+        if fragment_offset > 0 {
+            vec![undissected_layer(
+                "IP fragment data",
+                format!(
+                    "non-first fragment (offset={} x8 bytes, {} bytes of data)",
+                    fragment_offset,
+                    payload_bytes.len()
+                ),
+                payload_base,
+                payload_bytes.len(),
+            )]
+        } else {
+            let dissected = match protocol {
+                6 => tcp::dissect(payload_bytes, payload_base),
+                17 => udp::dissect(payload_bytes, payload_base),
+                _ => Ok(undissected_layer(
+                    format!("{} (not yet dissected)", protocol_name(protocol)),
+                    format!(
+                        "{} bytes of payload at offset {}",
+                        payload_bytes.len(),
+                        payload_base
+                    ),
+                    payload_base,
+                    payload_bytes.len(),
+                )),
+            };
+
+            match dissected {
+                Ok(layer) => vec![layer],
+                Err(e) => vec![undissected_layer(
+                    format!("{} (error)", protocol_name(protocol)),
+                    e.to_string(),
+                    payload_base,
+                    payload_bytes.len(),
+                )],
+            }
+        }
     } else {
         vec![]
     };

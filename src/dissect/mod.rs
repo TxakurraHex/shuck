@@ -13,6 +13,8 @@ pub type DissectResult = Result<Layer, DissectError>;
 pub mod arp;
 pub mod ethernet;
 pub mod ipv4;
+pub mod tcp;
+pub mod udp;
 
 pub mod ethertype {
     pub const IPV4: u16 = 0x0800;
