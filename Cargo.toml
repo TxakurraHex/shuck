@@ -1,5 +1,5 @@
 [package]
-name = "gull"
+name = "shuck"
 version = "0.1.0"
 edition = "2024"
 description = "A hand-rolled packet dissector TUI"

@@ -17,7 +17,7 @@ mod ui;
 use app::App;
 
 #[derive(Parser)]
-#[command(name = "gull", version, about = "Hand-rolled packet dissector TUI")]
+#[command(name = "shuck", version, about = "Hand-rolled packet dissector TUI")]
 struct Cli {
     /// Path to a .pcap or .pcapng file
     file: PathBuf,

@@ -1,4 +1,4 @@
-# gull
+# shuck
 
 A hand-rolled packet dissector for the terminal. Reads `.pcap` and `.pcapng`
 files offline, decodes the link/network/transport/application headers
@@ -11,7 +11,7 @@ replacement.
 
 ## Status
 
-Early. Phase 1 of the planned roadmap. Today gull can:
+Early. Phase 1 of the planned roadmap. Today shuck can:
 
 - Open `.pcap` (classic, both endiannesses, both microsecond and nanosecond
   timestamp variants) and `.pcapng` files
@@ -40,8 +40,8 @@ explicit non-goals for the foreseeable future.
 ## Quick start
 
 ```bash
-git clone https://github.com/TxakurraHex/gull
-cd gull
+git clone https://github.com/TxakurraHex/shuck
+cd shuck
 
 # A small all-DNS sample to get going.
 mkdir -p samples
@@ -69,7 +69,7 @@ pane highlights the selected field's bytes.
 ## Layout
 
 ```
-gull/
+shuck/
 ├── Cargo.toml
 ├── samples/ # gitignored, drop pcap files here
 └── src/
@@ -93,7 +93,7 @@ gull/
 ### Hand-rolled dissectors
 
 The whole point of this project is the parsing. Every protocol is decoded
-by gull's own code rather than via a library like `etherparse`. That makes
+by shuck's own code rather than via a library like `etherparse`. That makes
 the project slower to build but better as a way to learn how the bytes are
 laid out.
 
@@ -111,14 +111,14 @@ offsets without any extra bookkeeping.
 
 ### Offline only
 
-gull reads pcap files from disk. It does not capture from interfaces.
+shuck reads pcap files from disk. It does not capture from interfaces.
 Live capture brings privilege requirements, BPF filter compilation, and
 ring-buffer mechanics that are interesting on their own and not part of
 what this project is for.
 
 ### Errors are layers
 
-If a frame cannot be dissected, gull renders a synthetic "Undissected"
+If a frame cannot be dissected, shuck renders a synthetic "Undissected"
 layer in the tree carrying the parser's error message. A single bad
 frame never takes down the capture view.
 
@@ -128,11 +128,11 @@ frame never takes down the capture view.
   ([wiki.wireshark.org/SampleCaptures](https://wiki.wireshark.org/SampleCaptures))
 - pcapng files written by recent versions of Wireshark and tcpdump
 
-## Why "gull"?
+## Why "shuck"?
 
-Gulls are scrappy aquatic predators. They dive on whatever is interesting
-near the surface, eat the parts they like, and leave the rest. It seemed
-appropriate.
+Shucking is the act of stripping back an outer husk to get at what's
+inside. A packet is a similar object: layer wrapped around layer wrapped
+around payload. The tool does exactly that, one nested header at a time.
 
 ## License
 
@@ -141,7 +141,7 @@ MIT License
 ## Acknowledgements
 
 - The Wireshark project, both for the sample captures and for being the
-  reference against which gull's output gets sanity-checked.
+  reference against which shuck's output gets sanity-checked.
 - Tobias Bieniek and the [`pcap-file`](https://crates.io/crates/pcap-file)
   maintainers for a clean, pure-Rust pcap and pcapng reader.
 - The [`ratatui`](https://ratatui.rs) and [`crossterm`](https://crates.io/crates/crossterm)
