@@ -1,4 +1,4 @@
-use super::{DissectError, DissectResult, undissected_layer};
+use super::{DissectError, DissectResult, dns, undissected_layer};
 use crate::model::{Field, Layer};
 
 fn port_name(port: u16) -> Option<&'static str> {
@@ -75,13 +75,32 @@ pub fn dissect(bytes: &[u8], base: usize) -> DissectResult {
     let summary = format!("{src_port} -> {dst_port}, len={payload_len}");
 
     let children = if payload_len > 0 {
+        let payload_bytes = &bytes[8..];
         let payload_base = base + 8;
-        vec![undissected_layer(
-            "Application data (not yet dissected)",
-            format!("{payload_len} bytes of payload at offset {payload_base}"),
-            payload_base,
-            payload_len,
-        )]
+
+        let is_dns = matches!(
+            (src_port, dst_port),
+            (53, _) | (_, 53) | (5353, _) | (_, 5353) | (5355, _) | (_, 5355)
+        );
+
+        if is_dns && dns::looks_like_dns(payload_bytes) {
+            match dns::dissect(payload_bytes, payload_base) {
+                Ok(layer) => vec![layer],
+                Err(e) => vec![undissected_layer(
+                    "DNS (error)",
+                    e.to_string(),
+                    payload_base,
+                    payload_len,
+                )],
+            }
+        } else {
+            vec![undissected_layer(
+                "Application data (not yet dissected)",
+                format!("{payload_len} bytes of payload at offset {payload_base}"),
+                payload_base,
+                payload_len,
+            )]
+        }
     } else {
         vec![]
     };

@@ -11,6 +11,7 @@ pub enum DissectError {
 pub type DissectResult = Result<Layer, DissectError>;
 
 pub mod arp;
+pub mod dns;
 pub mod ethernet;
 pub mod ipv4;
 pub mod tcp;
