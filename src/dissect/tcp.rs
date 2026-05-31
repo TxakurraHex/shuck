@@ -245,7 +245,7 @@ fn walk_options(bytes: &[u8], base: usize) -> Vec<Field> {
                     offset: base + i,
                     length: 1,
                 });
-                break;
+                i += 1;
             }
             _ => {
                 if i + 1 >= bytes.len() {

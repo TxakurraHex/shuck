@@ -473,7 +473,7 @@ fn read_rr(
         },
         Field {
             name: "Class".into(),
-            value: format!("{rclass} ({})", class_name(rtype)),
+            value: format!("{rclass} ({})", class_name(rclass)),
             offset: base + pos + 2,
             length: 2,
         },
@@ -649,7 +649,7 @@ pub fn dissect(bytes: &[u8], base: usize) -> DissectResult {
 
     // Answer / Authority / Additional sections share the same RR shape.
     for (section, count) in [
-        ("Answser", ancount),
+        ("Answer", ancount),
         ("Authority", nscount),
         ("Additional", arcount),
     ] {
